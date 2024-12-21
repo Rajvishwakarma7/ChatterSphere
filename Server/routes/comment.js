@@ -95,9 +95,9 @@ router.get("/get-blog-wise", checkAuth, (req, res) => {
   comment
     .find({ blogId: req.query.blogId })
     .then((result) => {
-      if (result.length == 0) {
-        return res.status(201).json({ msg: " No comments  found" });
-      }
+      // if (result.length == 0) {
+      //   return res.status(201).json({ msg: " No comments  found" });
+      // }
       res.status(200).json({ msg: "comments related blogs", result });
     })
     .catch((error) => {

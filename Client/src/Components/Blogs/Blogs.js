@@ -27,18 +27,18 @@ function Blogs() {
   }, [categoryData, navigate]);
 
   function getBlogs() {
-    GetApi(`/blog?categoryId=${categoryData._id}`, (err, res) => {
+    GetApi(`/blog?categoryId=${categoryData._id}`, async (err, res) => {
       if (err) {
         console.log(err);
       } else if (res.status === 200) {
         if (res.data.blogs.length > 0) {
-          setBlogs(() =>
-            res.data.blogs.map((blogsItems) => {
-              let blogComments = getBlogComments(blogsItems);
-              console.log("blogscomments", blogComments);
-              return { ...blogsItems, Comments: blogComments };
+          let getAllBlogs = await Promise.all(
+            res.data.blogs.map(async (blogsItems) => {
+              let getRes = await getBlogComments(blogsItems);
+              return getRes;
             })
           );
+          setBlogs(getAllBlogs);
         }
       } else {
         console.log(res);
@@ -129,7 +129,8 @@ function Blogs() {
         if (err) {
           console.error("Error:", err);
         } else if (res.status === 200) {
-          console.log("comment added successfully:", res.data);
+          // console.log("comment added successfully:", res.data);
+          getBlogs();
         } else {
           console.error("Failed to add category:", res);
         }
@@ -138,21 +139,21 @@ function Blogs() {
     );
   }
 
-  function getBlogComments(blog) {
-    console.log(" blog blog:", blog);
-    GetApi(`/comment/get-blog-wise?blogId=${blog._id}`, (err, res) => {
-      if (err) {
-        console.log(err);
-        return [];
-      } else if (res.status === 200) {
-        return res.data.result;
-      } else {
-        console.log(res);
-        return [];
-      }
+  async function getBlogComments(blog) {
+    return new Promise((resolve, reject) => {
+      GetApi(`/comment/get-blog-wise?blogId=${blog._id}`, (err, res) => {
+        if (err) {
+          console.log(err);
+          reject(err);
+        } else if (res.status === 200) {
+          resolve({ ...blog, comments: res.data.result });
+        } else {
+          console.log(res);
+          reject(new Error("Failed to fetch comments"));
+        }
+      });
     });
   }
-  console.log("blogs", blogs);
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Header */}
@@ -190,45 +191,6 @@ function Blogs() {
         {(blogs &&
           blogs.length > 0 &&
           blogs.map((blog) => (
-            // <div className="relative bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-            //   {/* Image Section */}
-            //   <img
-            //     src={blog?.image?.url}
-            //     alt={blog.blog_title}
-            //     className="w-full h-48 sm:h-56 object-contain rounded-lg shadow-lg hover:scale-105 transition-transform duration-300"
-            //   />
-
-            //   {/* Content Section */}
-            //   <div className="p-4">
-            //     <h3 className="text-lg font-semibold text-gray-800 truncate">
-            //       {blog.blog_title}
-            //     </h3>
-            //     <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-            //       {blog.description}
-            //     </p>
-            //   </div>
-
-            //   {/* Action Icons */}
-            //   <div className="absolute top-2 right-2 flex flex-col items-center gap-2">
-            //     {/* Edit Button */}
-            //     <div
-            //       className="text-white bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 shadow-md transition"
-            //       title="Edit Blog"
-            //       onClick={() => console.log("Edit clicked for:", blog)}
-            //     >
-            //       <FaEdit className="w-5 h-5" />
-            //     </div>
-
-            //     {/* Delete Button */}
-            //     <div
-            //       className="text-white bg-red-500 p-2 rounded-full cursor-pointer hover:bg-red-600 shadow-md transition"
-            //       title="Delete Blog"
-            //       onClick={() => handleDelete(blog)}
-            //     >
-            //       <FaTrashAlt className="w-5 h-5" />
-            //     </div>
-            //   </div>
-            // </div>
             <div className="relative bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
               {/* Image Section */}
               <img
@@ -279,8 +241,10 @@ function Blogs() {
                   {blog.comments?.length ? (
                     blog.comments.map((comment, index) => (
                       <div key={index} className="bg-gray-100 p-2 rounded-lg">
-                        <p className="text-sm text-gray-800">{comment.text}</p>
-                        <span className="text-xs text-gray-500">{`- ${comment.user}`}</span>
+                        <p className="text-sm text-gray-800">
+                          {comment.comments}
+                        </p>
+                        {/* <span className="text-xs text-gray-500">user </span> */}
                       </div>
                     ))
                   ) : (

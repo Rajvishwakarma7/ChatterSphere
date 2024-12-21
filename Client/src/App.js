@@ -2,9 +2,6 @@ import { Routes, Route, BrowserRouter } from "react-router-dom";
 import Login from "./Pages/Login/Login";
 import Home from "./Components/Home/Home";
 import Register from "./Pages/Register/Register";
-
-// import Contact from "./Components/Contact/Contact";
-// import Category from "./Components/Category/Category";
 import Community from "./Components/Community/Community";
 import PrivateChat from "./Components/PrivateChat/PrivateChat";
 import { AuthProvider } from "./Pages/AuthProvider/AuthProvider";
@@ -21,8 +18,6 @@ function App() {
             {/* private routes */}
             <Route element={<ProtectedRutes />}>
               <Route path="*" element={<Home />} />
-              {/* <Route path="/contact" element={<Contact />} />
-              <Route path="/category" element={<Category />} /> */}
               <Route path="/community" element={<Community />} />
               <Route path="/private-chat" element={<PrivateChat />} />
               <Route path="/blogs" element={<Blogs />} />

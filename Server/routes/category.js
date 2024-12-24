@@ -99,36 +99,10 @@ router.delete("/:id", checkAuth, (req, res) => {
 // update
 
 router.put("/update", checkAuth, (req, res) => {
-  let token = req.headers.authorization.split(" ")[1];
-  let isVarify = jwt.verify(token, "raj 28");
-
-  if (!req.body.id) {
-    return res.status(400).json({ msg: "id is required" });
-  }
-
-  category
-    .findOneAndUpdate(
-      { _id: req.body.id, userId: isVarify.userId },
-      {
-        $set: {
-          userId: isVarify.userId,
-          title: req.body.title,
-          imageUrl: req.body.imageUrl,
-          discription: req.body.discription,
-        },
-      },
-      { new: true }
-    )
-    .then((result) => {
-      if (result == null) {
-        return res.status(400).json({ msg: "item not found" });
-      }
-      res.status(200).json({ msg: result });
-    })
-    .catch((typeError) => {
-      return res
-        .status(404)
-        .json({ msg: "Category not found or unauthorized" });
-    });
+  console.log("this is hit api -category Id---->>>", req.query.categoryId);
+  category.findById({ _id: req.query.categoryId }).then((result) => {
+    console.log("result", result);
+  });
+  return res.status(200).json({ msg: "get msg" });
 });
 module.exports = router;

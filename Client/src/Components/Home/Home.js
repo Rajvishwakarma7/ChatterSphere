@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { GetApi, PostApi } from "../../Services/ApiServices";
+import { GetApi, PostApi, PutApi } from "../../Services/ApiServices";
 import { FaEdit, FaPlus, FaRegEye, FaTimes } from "react-icons/fa";
 import { getUserInfo } from "../../Pages/AuthProvider/AuthProvider";
 import { useNavigate } from "react-router-dom";
@@ -8,12 +8,16 @@ function Home() {
   const userInfo = getUserInfo().loginInf;
   const [categoryData, setCategoryData] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [isEditOrAdd, setisEditOrAdd] = useState("Add");
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     image: null,
   });
   const [previewImage, setPreviewImage] = useState(null);
+  const [isEdit, setIsEdit] = useState(false); // New state to track edit mode
+  const [editCategoryId, setEditCategoryId] = useState(null); // Track which category is being edited
   const navigate = useNavigate();
 
   // Fetch categories
@@ -49,43 +53,101 @@ function Home() {
     }
   };
 
+  const handleEdit = (category) => {
+    setShowAddForm(true);
+    setIsEdit(true);
+    setEditCategoryId(category._id); // Assuming each category has a unique `_id`
+    setFormData({
+      title: category.title,
+      description: category.description,
+      image: null, // Reset the image, as the user will upload a new one if needed
+    });
+    setPreviewImage(category?.imageDetail?.url || null); // Set the preview image
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
     const data = new FormData();
     data.append("title", formData.title);
     data.append("description", formData.description);
-    data.append("image", formData.image);
+    if (formData.image) {
+      data.append("image", formData.image);
+    }
     data.append("userId", userInfo.userId);
 
-    // console.log("data form --------->>>", data);
-    PostApi(
-      "/category",
-      data,
-      (err, res) => {
-        if (err) {
-          console.error("Error:", err);
-        } else if (res.status === 200) {
-          console.log("Category added successfully:", res.data);
-          fetchCategories();
-          setShowAddForm(false);
-          setFormData({ title: "", description: "", image: null });
-          setPreviewImage(null); // Clear preview after submission
-        } else {
-          console.error("Failed to add category:", res);
-        }
-      },
-      {}
-    );
+    if (isEditOrAdd === "Add") {
+      PostApi(
+        "/category",
+        data,
+        (err, res) => {
+          if (err) {
+            console.error("Error:", err);
+          } else if (res.status === 200) {
+            console.log(
+              isEdit
+                ? "Category updated successfully:"
+                : "Category added successfully:",
+              res.data
+            );
+            fetchCategories();
+            setShowAddForm(false);
+            setFormData({ title: "", description: "", image: null });
+            setPreviewImage(null); // Clear preview after submission
+            setIsEdit(false); // Reset edit mode
+            setEditCategoryId(null); // Clear edit category ID
+          } else {
+            console.error("Failed to submit category:", res);
+          }
+        },
+        {}
+      );
+    } else if (isEditOrAdd === "Edit") {
+      PutApi(
+        `/category/update?categoryId=${editCategoryId ? editCategoryId : ""}`,
+        data,
+        (err, res) => {
+          if (err) {
+            console.error("Error:", err);
+          } else if (res.status === 200) {
+            console.log(
+              isEdit
+                ? "Category updated successfully:"
+                : "Category added successfully:",
+              res.data
+            );
+            // fetchCategories();
+            // setShowAddForm(false);
+            // setFormData({ title: "", description: "", image: null });
+            // setPreviewImage(null); // Clear preview after submission
+            // setIsEdit(false); // Reset edit mode
+            // setEditCategoryId(null); // Clear edit category ID
+          } else {
+            console.error("Failed to submit category:", res);
+          }
+        },
+        {}
+      );
+    }
   };
-
+  // console.log("is edit", isEditOrAdd);
   return (
     <div className="container mx-auto px-4 mt-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Categories</h1>
 
         <button
-          onClick={() => setShowAddForm(!showAddForm)}
+          onClick={() => {
+            setisEditOrAdd("Add");
+            setShowAddForm(!showAddForm);
+            if (showAddForm) {
+              // Reset form on closing
+              setFormData({ title: "", description: "", image: null });
+              setPreviewImage(null);
+              setIsEdit(false);
+              setEditCategoryId(null);
+            }
+          }}
           className="flex items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition"
         >
           {showAddForm ? (
@@ -143,7 +205,7 @@ function Home() {
               name="image"
               onChange={handleFileChange}
               className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
-              required
+              required={!isEdit} // Make image optional for updates
             />
             {previewImage && (
               <div className="mt-4">
@@ -161,7 +223,7 @@ function Home() {
               type="submit"
               className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded shadow transition"
             >
-              Submit
+              {isEdit ? "Update" : "Submit"}
             </button>
           </div>
         </form>
@@ -187,7 +249,10 @@ function Home() {
                 <div
                   className="text-white bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 shadow-md transition"
                   title="Edit Item"
-                  onClick={() => console.log("Edit clicked for:", catItem)}
+                  onClick={() => {
+                    setisEditOrAdd("Edit");
+                    handleEdit(catItem);
+                  }}
                 >
                   <FaEdit className="w-5 h-5" />
                 </div>

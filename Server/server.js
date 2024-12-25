@@ -9,7 +9,7 @@ const server = http.createServer(app);
 // socket logic ----->>>
 const io = new Server(server, {
   cors: {
-    origin: process.env.REACT_CLIENT_URL,
+    origin: "*",
     methods: ["GET", "POST"],
     credentials: true,
   },

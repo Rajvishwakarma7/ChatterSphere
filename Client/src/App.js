@@ -15,7 +15,7 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* private routes */}
+            {/* private routes-- */}
             <Route element={<ProtectedRutes />}>
               <Route path="*" element={<Home />} />
               <Route path="/community" element={<Community />} />

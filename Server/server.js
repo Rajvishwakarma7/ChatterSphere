@@ -11,6 +11,7 @@ const io = new Server(server, {
   cors: {
     origin: process.env.REACT_CLIENT_URL,
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 io.on("connection", (socket) => {

@@ -5,7 +5,7 @@ const checkAuth = require("../middleware/checkAuth");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const upload = require("../middleware/multers");
-
+const fs = require("fs");
 // add category ---
 router.post("/", checkAuth, upload.single("image"), (req, res) => {
   // console.log("req for category ", req.body);
@@ -74,35 +74,63 @@ router.get("/", checkAuth, (req, res) => {
 });
 
 //delete category
-router.delete("/:id", checkAuth, (req, res) => {
-  let token = req.headers.authorization.split(" ")[1];
-  let isVarify = jwt.verify(token, "raj 28");
-
-  category
-    .deleteOne({ _id: req.params.id, userId: isVarify.userId })
-    // .findOne({ _id: req.params.id })
-    .then((result) => {
-      if (result.deletedCount == 0) {
-        return res.status(401).json({
-          msg: "somethng went wrong , token invalid !",
-          deleted_data: result,
-        });
+router.delete("/delete", checkAuth, async (req, res) => {
+  try {
+    const { categoryId } = req.query;
+    console.log("categoryId", categoryId);
+    const getCategory = await category.findById({ _id: categoryId });
+    if (!getCategory) {
+      return res.status(404).json({ err: "Category not found !" });
+    }
+    if (getCategory.imageDetail && getCategory.imageDetail.path) {
+      if (fs.existsSync(getCategory.imageDetail.path)) {
+        fs.unlinkSync(getCategory.imageDetail.path);
       }
-
-      res.status(200).json({ msg: "category delected", deleted_data: result });
-    })
-    .catch((typeError) => {
-      return res.status(201).json({ err: typeError });
-    });
+    }
+    const deletedCat = await category.findByIdAndDelete(categoryId);
+    return res
+      .status(200)
+      .json({ msg: "Category deleted successfully", deletedCat });
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({ err: error.message });
+  }
 });
 
 // update
 
-router.put("/update", checkAuth, (req, res) => {
-  console.log("this is hit api -category Id---->>>", req.query.categoryId);
-  category.findById({ _id: req.query.categoryId }).then((result) => {
-    console.log("result", result);
-  });
-  return res.status(200).json({ msg: "get msg" });
+router.put("/update", checkAuth, upload.single("image"), async (req, res) => {
+  try {
+    const { categoryId } = req.query;
+    const { title, description } = req.body;
+    const getCategory = await category.findById({ _id: categoryId });
+    if (!getCategory) {
+      return res.status(404).json({ err: "Category not found !" });
+    }
+    if (getCategory.imageDetail && getCategory.imageDetail.path) {
+      if (fs.existsSync(getCategory.imageDetail.path)) {
+        fs.unlinkSync(getCategory.imageDetail.path);
+      }
+    }
+    const updatedCategory = await category.findByIdAndUpdate(
+      categoryId,
+      {
+        description: description,
+        title: title,
+        imageDetail: {
+          filename: req.file.filename,
+          path: req.file.path,
+          url: `/uploads/${req.file.filename}`,
+        },
+      },
+      { new: true }
+    );
+    return res
+      .status(200)
+      .json({ msg: "Update Successfully", updatedCategory });
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({ err: error.message });
+  }
 });
 module.exports = router;

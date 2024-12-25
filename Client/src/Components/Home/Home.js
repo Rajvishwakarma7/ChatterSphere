@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { GetApi, PostApi, PutApi } from "../../Services/ApiServices";
-import { FaEdit, FaPlus, FaRegEye, FaTimes } from "react-icons/fa";
+import { GetApi, PostApi, PutApi, deleteApi } from "../../Services/ApiServices";
+import { FaEdit, FaPlus, FaRegEye, FaTimes, FaTrashAlt } from "react-icons/fa";
 import { getUserInfo } from "../../Pages/AuthProvider/AuthProvider";
 import { useNavigate } from "react-router-dom";
 
@@ -110,18 +110,13 @@ function Home() {
           if (err) {
             console.error("Error:", err);
           } else if (res.status === 200) {
-            console.log(
-              isEdit
-                ? "Category updated successfully:"
-                : "Category added successfully:",
-              res.data
-            );
-            // fetchCategories();
-            // setShowAddForm(false);
-            // setFormData({ title: "", description: "", image: null });
-            // setPreviewImage(null); // Clear preview after submission
-            // setIsEdit(false); // Reset edit mode
-            // setEditCategoryId(null); // Clear edit category ID
+            console.log("Category updated successfully:", res.data);
+            fetchCategories();
+            setShowAddForm(false);
+            setFormData({ title: "", description: "", image: null });
+            setPreviewImage(null); // Clear preview after submission
+            setIsEdit(false); // Reset edit mode
+            setEditCategoryId(null); // Clear edit category ID
           } else {
             console.error("Failed to submit category:", res);
           }
@@ -130,6 +125,34 @@ function Home() {
       );
     }
   };
+
+  async function handleDeleteCategory(catItem) {
+    if (window.confirm("Are you sure you want to delete this Category?")) {
+      try {
+        // console.log("blog", blog._id);
+        deleteApi(
+          `/category/delete?categoryId=${catItem._id ? catItem._id : ""}`,
+          { id: catItem._id ? catItem._id : "" },
+          (err, res) => {
+            if (err) {
+              console.error("Error:", err);
+            } else if (res.status === 200) {
+              console.log("Category deleted successfully:", res.data);
+              fetchCategories();
+            } else {
+              console.error("Failed to add category:", res);
+            }
+          },
+          {}
+        );
+      } catch (error) {
+        console.error("Error deleting blog:", error);
+        alert("An error occurred while deleting the blog");
+      }
+    }
+  }
+  // delete blog
+
   // console.log("is edit", isEditOrAdd);
   return (
     <div className="container mx-auto px-4 mt-6">
@@ -246,6 +269,7 @@ function Home() {
               />
               {/* Action Icons */}
               <div className="absolute top-2 right-2 flex flex-col items-center gap-2">
+                {/* Edit Button */}
                 <div
                   className="text-white bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 shadow-md transition"
                   title="Edit Item"
@@ -255,6 +279,15 @@ function Home() {
                   }}
                 >
                   <FaEdit className="w-5 h-5" />
+                </div>
+
+                {/* Delete Button */}
+                <div
+                  className="text-white bg-red-500 p-2 rounded-full cursor-pointer hover:bg-red-600 shadow-md transition"
+                  title="Delete Item"
+                  onClick={() => handleDeleteCategory(catItem)}
+                >
+                  <FaTrashAlt className="w-5 h-5" />
                 </div>
               </div>
             </div>

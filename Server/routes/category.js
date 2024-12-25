@@ -50,7 +50,7 @@ router.get("/", checkAuth, (req, res) => {
   if (isVarify) {
     try {
       category
-        .find({ userId: isVarify.userId })
+        .find()
         // .select("_id userId title imageUrl discription")
         .then((savedCategory) => {
           const baseUrl = `${req.protocol}://${req.get("host")}`;

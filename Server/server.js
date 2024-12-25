@@ -1,9 +1,9 @@
 const http = require("http");
-const port = 8080;
 const app = require("./app");
 const { Server } = require("socket.io");
 const communityChat = require("./model/communityChat");
 
+const port = process.env.PORT || 3000;
 const server = http.createServer(app);
 
 // socket logic ----->>>

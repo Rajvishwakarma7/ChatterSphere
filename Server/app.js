@@ -15,7 +15,7 @@ const app = express();
 // Enable CORS for all routes
 app.use(
   cors({
-    origin: process.env.REACT_CLIENT_URL,
+    origin: process.env.REACT_CLIENT_URL, // Dynamically handled based on environment
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "x-requested-with"],
     credentials: true,
@@ -25,10 +25,7 @@ app.use(
 
 // Database Connection
 mongoose
-  .connect(process.env.MONGODB_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGODB_URL)
   .then(() => console.log("Connected to Database"))
   .catch((err) => console.error("Database connection error:", err));
 

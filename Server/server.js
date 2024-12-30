@@ -6,7 +6,7 @@ const communityChat = require("./model/communityChat");
 const port = process.env.PORT || 3000;
 const server = http.createServer(app);
 
-// socket logic ----->>>
+// Socket logic
 const io = new Server(server, {
   cors: {
     origin: process.env.REACT_CLIENT_URL,
@@ -14,46 +14,51 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+
 io.on("connection", (socket) => {
-  console.log("A new User Connected ", socket.id);
+  console.log("A new User Connected", socket.id);
+
   socket.on("roomId", (roomId) => {
     console.log(socket.id, "room id received", roomId);
     socket.join(roomId);
   });
 
-  // recieve the message
-  socket.on("message", (arg) => {
-    // console.log("this is message ", arg);
+  socket.on("message", async (arg) => {
     if (arg) {
-      // emit or send the message
-      const { firstName, lastName, email, userId } = arg.userInfo;
-      // console.log(firstName, lastName, email, userId, arg.message, arg.roomId);
-      const newChat = new communityChat({
-        userId: userId,
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        message: arg.message ? arg.message : null,
-        roomId: arg.roomId ? arg.roomId : null,
-        receiverId: arg.receiverId ? arg.receiverId : null,
-      });
-      newChat
-        .save()
-        .then((res) => {
-          io.to(res.roomId).emit("message", res);
-          console.log("This is emit message------>>>>", res);
-        })
-        .catch((err) => {
-          console.log("this is socket Err", err);
+      const {
+        firstName,
+        lastName,
+        email,
+        userId,
+        message,
+        roomId,
+        receiverId,
+      } = arg.userInfo;
+      try {
+        const newChat = new communityChat({
+          userId,
+          firstName,
+          lastName,
+          email,
+          message: message || null,
+          roomId: roomId || null,
+          receiverId: receiverId || null,
         });
+
+        const savedChat = await newChat.save();
+        io.to(savedChat.roomId).emit("message", savedChat);
+        console.log("Emit message:", savedChat);
+      } catch (err) {
+        console.error("Socket error:", err);
+      }
     }
   });
-  // Handle user disconnects
+
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
   });
 });
 
 server.listen(port, () => {
-  console.log("App  is running on port ------->>>", port);
+  console.log("App is running on port:", port);
 });

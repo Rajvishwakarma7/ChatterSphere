@@ -51,7 +51,7 @@ function AppHeader() {
         } sm:flex items-center space-x-6 justify-between sm:justify-end absolute sm:static bg-blue-500 sm:bg-transparent w-full sm:w-auto top-16 left-0 sm:flex-row flex-col sm:space-x-6 sm:p-0 p-4`}
       >
         <NavLink
-          to="/home"
+          to="/"
           className={({ isActive }) =>
             `text-sm font-medium ${
               isActive ? "text-yellow-400" : "text-white hover:text-yellow-400"

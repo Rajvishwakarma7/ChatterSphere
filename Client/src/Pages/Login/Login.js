@@ -56,7 +56,7 @@ const Login = () => {
                   tokenInfo: res.data.token,
                 })
               );
-              navigate("/home");
+              navigate("/");
             });
           }
         }

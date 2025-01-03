@@ -25,7 +25,7 @@ function ProtectedRutes() {
           </main>
         </div>
       ) : (
-        <Navigate to="/" />
+        <Navigate to="/login" />
       )}
     </>
   );

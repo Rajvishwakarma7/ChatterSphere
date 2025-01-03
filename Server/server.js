@@ -24,16 +24,13 @@ io.on("connection", (socket) => {
   });
 
   socket.on("message", async (arg) => {
+    console.log("arg-------------->>>", arg);
     if (arg) {
-      const {
-        firstName,
-        lastName,
-        email,
-        userId,
-        message,
-        roomId,
-        receiverId,
-      } = arg.userInfo;
+      const { firstName, lastName, email, userId } = arg.userInfo;
+      const message = arg.message;
+      const roomId = arg.roomId ? arg.roomId : "";
+      const receiverId = arg.receiverId ? arg.receiverId : "";
+
       try {
         const newChat = new communityChat({
           userId,
